@@ -5,7 +5,7 @@
  * @returns {object} - returns the new object
  */
 export const pick = (object, ...fields) => {
-  let copyOfObj = {};
+  const copyOfObj = {};
 
   for (const key in object) {
     if (fields.includes(key)) {
