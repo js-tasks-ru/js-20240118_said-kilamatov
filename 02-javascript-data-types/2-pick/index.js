@@ -5,10 +5,12 @@
  * @returns {object} - returns the new object
  */
 export const pick = (object, ...fields) => {
-  const copyOfObj = { ...object };
+  let copyOfObj = {};
 
-  for (const key in copyOfObj) {
-    if (!fields.includes(key)) delete copyOfObj[key];
+  for (const key in object) {
+    if (fields.includes(key)) {
+      copyOfObj[key] = object[key];
+    }
   }
 
   return copyOfObj;
