@@ -4,7 +4,7 @@
  * @returns {object | undefined} - returns new object or undefined if nothing did't pass
  */
 export function invertObj(obj) {
-  if (typeof obj === "undefined") {
+  if (!obj) {
     return;
   }
   const map = new Map(Object.entries(obj));

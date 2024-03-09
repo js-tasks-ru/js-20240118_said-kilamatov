@@ -9,22 +9,26 @@ export function trimSymbols(string, size) {
     return string;
   }
 
-  const copyOfString = string.split("");
-  const result = [];
-  let count = 0;
-
-  for (let i = 0; i < copyOfString.length; i++) {
-    const letter = copyOfString[i];
-    if (letter === copyOfString[i - 1]) {
-      count++;
-    } else {
-      count = 1;
-    }
-
-    if (count <= size) {
-      result.push(letter);
-    }
+  if (size === 0) {
+    return "";
   }
 
-  return result.join("");
+  let letter = string.charAt(0);
+  let count = 0;
+  let result = "";
+
+  for (let i = 0; i < string.length; i++) {
+    if (letter === string.charAt(i)) {
+      if (++count <= size) {
+        result += string.charAt(i);
+      }
+    } else {
+      count = 1;
+      result += string.charAt(i);
+    }
+
+    letter = string.charAt(i);
+  }
+
+  return result;
 }
