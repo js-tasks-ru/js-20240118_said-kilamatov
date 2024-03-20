@@ -5,7 +5,6 @@ export default class SortableTable {
   constructor(headerConfig = [], data = []) {
     this.headerConfig = headerConfig;
     this.data = JSON.parse(JSON.stringify(data));
-
     this.render();
   }
 
@@ -14,7 +13,6 @@ export default class SortableTable {
     element.innerHTML = this.createTemplateContainer();
     this.element = element.firstElementChild;
     this.subElements = this.getSubElements(this.element);
-    this.removeDefaultSortingArrows();
   }
 
   createTemplateContainer() {
@@ -41,9 +39,8 @@ export default class SortableTable {
   createTemplateHeaderConfig() {
     return this.headerConfig
       .map((item) => {
-        const sortableClass = item.sortable ? "sortable-table__cell" : "";
         return `
-        <div class="${sortableClass}" data-id="${item.id}" data-sortable="${
+        <div class="sortable-table__cell" data-id="${item.id}" data-sortable="${
           item.sortable
         }">
           <span>${item.title}</span>
@@ -86,26 +83,31 @@ export default class SortableTable {
   }
 
   sort(field, order) {
+    const sortableHeader = this.element.querySelector(`[data-id="${field}"]`);
+    if (!sortableHeader || sortableHeader.dataset.sortable !== "true") return;
+
+    sortableHeader.dataset.order = order;
+
     const sortType = this.headerConfig.find(
       (item) => item.id === field
     )?.sortType;
 
     this.data.sort((a, b) => {
-      const aValue = a[field];
-      const bValue = b[field];
-
-      if (sortType === "string") {
-        return order === "asc"
-          ? aValue.localeCompare(bValue, ["ru-RU", "en-EN"], {
-              caseFirst: "upper",
-            })
-          : bValue.localeCompare(aValue, ["ru-RU", "en-EN"], {
-              caseFirst: "upper",
-            });
+      if (sortType === "number") {
+        return order === "asc" ? a[field] - b[field] : b[field] - a[field];
       }
 
-      return order === "asc" ? aValue - bValue : bValue - aValue;
+      return order === "asc"
+        ? a[field].localeCompare(b[field], ["ru-RU", "en-EN"], {
+            caseFirst: "upper",
+          })
+        : b[field].localeCompare(a[field], ["ru-RU", "en-EN"], {
+            caseFirst: "upper",
+          });
     });
+
+    const bodyContainer = this.element.querySelector("[data-element='body']");
+    bodyContainer.innerHTML = this.createTemplateRows(this.data);
 
     this.updateBody();
   }
@@ -131,17 +133,5 @@ export default class SortableTable {
       acc[subElement.dataset.element] = subElement;
       return acc;
     }, {});
-  }
-
-  removeDefaultSortingArrows() {
-    const headerCells = this.element.querySelectorAll(
-      '[data-element="header"] .sortable-table__cell'
-    );
-    headerCells.forEach((cell) => {
-      const sortArrow = cell.querySelector(".sortable-table__sort-arrow");
-      if (sortArrow) {
-        sortArrow.remove();
-      }
-    });
   }
 }
