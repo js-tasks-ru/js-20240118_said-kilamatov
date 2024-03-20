@@ -1,19 +1,35 @@
 class Tooltip {
-  static instance = null;
-
-  tooltipElement = null;
-  tooltipShow = null;
+  static instance;
 
   constructor() {
     if (Tooltip.instance) {
       return Tooltip.instance;
     }
+
     Tooltip.instance = this;
+
+    this.isShow = false;
   }
 
-  initialize() {
-    document.addEventListener("pointerover", this.showTooltip);
-    document.addEventListener("pointerout", this.hideTooltip);
+  createListeners() {
+    document.body.addEventListener(
+      "pointerover",
+      this.handleDocumentPointerover
+    );
+    document.body.addEventListener("pointerout", this.hidePointerout);
+    document.body.addEventListener("pointermove", this.showPositionPointermove);
+  }
+
+  destroyListeners() {
+    document.body.removeEventListener(
+      "pointerover",
+      this.handleDocumentPointerover
+    );
+    document.body.removeEventListener("pointerout", this.hidePointerout);
+    document.body.removeEventListener(
+      "pointermove",
+      this.showPositionPointermove
+    );
   }
 
   createElement(template) {
@@ -22,74 +38,62 @@ class Tooltip {
     return element.firstElementChild;
   }
 
-  render(event) {
-    this.tooltipElement = this.createElement(
-      `<div class="tooltip">${event.target.dataset.tooltip}</div>`
-    );
-    return this.tooltipElement;
+  handleDocumentPointerover = (event) => {
+    const currentElement = event.target;
+    const tooltip = currentElement.dataset.tooltip;
+
+    if (!tooltip) {
+      return;
+    }
+
+    this.render(tooltip);
+
+    this.updateTooltipPosition(event.clientX, event.clientY);
+
+    this.isShow = true;
+  };
+
+  hidePointerout = () => {
+    if (this.isShow) {
+      this.remove();
+      this.isShow = false;
+    }
+  };
+
+  showPositionPointermove = (event) => {
+    if (this.isShow) {
+      this.updateTooltipPosition(event.pageX, event.pageY);
+    }
+  };
+
+  updateTooltipPosition(x, y) {
+    this.element.style.left = x + 15 + "px";
+    this.element.style.top = y + 15 + "px";
   }
 
-  showTooltip = (event) => {
-    const anchorElem = event.target.closest("[data-tooltip]");
+  initialize() {
+    this.destroyListeners();
+    this.createListeners();
+  }
 
-    if (!anchorElem) return;
+  template(tooltip) {
+    return `<div class="tooltip">${tooltip}</div>`;
+  }
 
-    anchorElem.ondragstart = function () {
-      return false;
-    };
+  render(tooltip) {
+    this.remove();
+    this.element = this.createElement(this.template(tooltip));
 
-    this.hideTooltip(); // Hide any existing tooltip before showing a new one
+    document.body.append(this.element);
+  }
 
-    this.tooltipShow = this.render(event);
-
-    document.body.appendChild(this.tooltipShow); // Append to body instead of event target
-
-    document.addEventListener("pointermove", this.positionTooltip);
-  };
-
-  positionTooltip = (event) => {
-    if (!this.tooltipShow) return;
-
-    const tooltipWidth = this.tooltipShow.offsetWidth;
-    const tooltipHeight = this.tooltipShow.offsetHeight;
-
-    let left = event.clientX + 10;
-    let top = event.clientY + 10;
-
-    if (left + tooltipWidth > window.innerWidth) {
-      left = window.innerWidth - tooltipWidth;
-    }
-    if (left < 0) {
-      left = 0;
-    }
-
-    if (top + tooltipHeight > window.innerHeight) {
-      top = window.innerHeight - tooltipHeight;
-    }
-    if (top < 0) {
-      top = 0;
-    }
-
-    this.tooltipShow.style.left = left + "px";
-    this.tooltipShow.style.top = top + "px";
-  };
-
-  hideTooltip = () => {
-    if (this.tooltipShow) {
-      this.tooltipShow.remove();
-      this.tooltipShow = null;
-      document.removeEventListener("pointermove", this.positionTooltip);
-    }
-  };
+  remove() {
+    this.element?.remove();
+  }
 
   destroy() {
-    if (this.tooltipShow) {
-      this.tooltipShow.remove();
-      this.tooltipShow = null;
-      document.removeEventListener("pointermove", this.positionTooltip);
-    }
-    document.removeEventListener("pointerover", this.showTooltip);
-    document.removeEventListener("pointerout", this.hideTooltip);
+    this.remove();
+    this.destroyListeners();
   }
 }
 
