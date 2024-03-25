@@ -4,7 +4,7 @@ export default class SortableTable {
 
   constructor(headerConfig = [], data = []) {
     this.headerConfig = headerConfig;
-    this.data = JSON.parse(JSON.stringify(data));
+    this.data = data;
     this.render();
   }
 
@@ -42,7 +42,7 @@ export default class SortableTable {
         return `
         <div class="sortable-table__cell" data-id="${item.id}" data-sortable="${
           item.sortable
-        }">
+        }" data-order="">
           <span>${item.title}</span>
           ${
             item.id === "title"
@@ -67,44 +67,41 @@ export default class SortableTable {
   createTemplateRowCells(item) {
     return this.headerConfig
       .map((headerItem) => {
-        if (headerItem.id === "images") {
-          return `
-            <div class="sortable-table__cell">
-              <img class="sortable-table-image" alt="Image" src="${
-                item.images[0]?.url || "https://via.placeholder.com/32"
-              }">
-            </div>
-          `;
-        }
-
-        return `<div class="sortable-table__cell">${item[headerItem.id]}</div>`;
+        return headerItem.id === "images"
+          ? headerItem.template()
+          : `<div class="sortable-table__cell">${item[headerItem.id]}</div>`;
       })
       .join("");
   }
 
+  sortNumberField = (field, order) => (a, b) => {
+    return order === "asc" ? a[field] - b[field] : b[field] - a[field];
+  };
+
+  sortStringField = (field, order) => (a, b) => {
+    return order === "asc"
+      ? a[field].localeCompare(b[field], ["ru-RU", "en-EN"], {
+          caseFirst: "upper",
+        })
+      : b[field].localeCompare(a[field], ["ru-RU", "en-EN"], {
+          caseFirst: "upper",
+        });
+  };
+
   sort(field, order) {
     const sortableHeader = this.element.querySelector(`[data-id="${field}"]`);
     if (!sortableHeader || sortableHeader.dataset.sortable !== "true") return;
-
     sortableHeader.dataset.order = order;
 
     const sortType = this.headerConfig.find(
       (item) => item.id === field
     )?.sortType;
 
-    this.data.sort((a, b) => {
-      if (sortType === "number") {
-        return order === "asc" ? a[field] - b[field] : b[field] - a[field];
-      }
-
-      return order === "asc"
-        ? a[field].localeCompare(b[field], ["ru-RU", "en-EN"], {
-            caseFirst: "upper",
-          })
-        : b[field].localeCompare(a[field], ["ru-RU", "en-EN"], {
-            caseFirst: "upper",
-          });
-    });
+    const sortFn =
+      sortType === "number"
+        ? this.sortNumberField(field, order)
+        : this.sortStringField(field, order);
+    this.data.sort(sortFn);
 
     const bodyContainer = this.element.querySelector("[data-element='body']");
     bodyContainer.innerHTML = this.createTemplateRows(this.data);
@@ -127,11 +124,14 @@ export default class SortableTable {
   }
 
   getSubElements(element) {
-    const subElements = element.querySelectorAll("[data-element]");
+    const result = {};
+    const elements = element.querySelectorAll("[data-element]");
 
-    return [...subElements].reduce((acc, subElement) => {
-      acc[subElement.dataset.element] = subElement;
-      return acc;
-    }, {});
+    for (const subElements of elements) {
+      const name = subElements.dataset.element;
+      result[name] = subElements;
+    }
+
+    return result;
   }
 }

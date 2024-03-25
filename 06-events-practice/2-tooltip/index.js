@@ -1,3 +1,5 @@
+const range = 15;
+
 class Tooltip {
   static instance;
 
@@ -67,8 +69,8 @@ class Tooltip {
   };
 
   updateTooltipPosition(x, y) {
-    this.element.style.left = x + 15 + "px";
-    this.element.style.top = y + 15 + "px";
+    this.element.style.left = x + range + "px";
+    this.element.style.top = y + range + "px";
   }
 
   initialize() {
@@ -81,9 +83,7 @@ class Tooltip {
   }
 
   render(tooltip) {
-    this.remove();
     this.element = this.createElement(this.template(tooltip));
-
     document.body.append(this.element);
   }
 
