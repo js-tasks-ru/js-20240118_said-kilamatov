@@ -37,9 +37,9 @@ export default class SortableTable extends SortableTableV1 {
     const element = document.createElement("div");
     element.innerHTML = `
     <span data-element="arrow" class="sortable-table__sort-arrow">
-    <span class="sort-arrow"></span>
-  </span>
-`;
+      <span class="sort-arrow"></span>
+    </span>
+  `;
     colClicked.append(element.firstElementChild);
   }
 
@@ -50,6 +50,6 @@ export default class SortableTable extends SortableTableV1 {
       asc: "desc",
     };
 
-    return currOrder === "" ? "asc" : toggleOrder[currOrder];
+    return currOrder === "" ? "desc" : toggleOrder[currOrder];
   }
 }

@@ -80,10 +80,10 @@ export default class SortableTable {
 
   sortStringField = (field, order) => (a, b) => {
     return order === "asc"
-      ? a[field].localeCompare(b[field], ["ru-RU", "en-EN"], {
+      ? a[field].localeCompare(b[field], ["ru", "en"], {
           caseFirst: "upper",
         })
-      : b[field].localeCompare(a[field], ["ru-RU", "en-EN"], {
+      : b[field].localeCompare(a[field], ["ru", "en"], {
           caseFirst: "upper",
         });
   };
