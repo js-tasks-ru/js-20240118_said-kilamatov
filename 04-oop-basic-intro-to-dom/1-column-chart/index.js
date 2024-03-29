@@ -1,6 +1,8 @@
 export default class ColumnChart {
   element;
   chartHeight = 50;
+  subElements = {};
+
   constructor({
     label = "",
     link = "",
@@ -14,6 +16,7 @@ export default class ColumnChart {
     this.value = value;
     this.formatHeading = formatHeading;
     this.element = this.createElement(this.createBodyChart());
+    this.selectSubElements();
   }
 
   createElement(template) {
@@ -22,11 +25,11 @@ export default class ColumnChart {
     return element.firstElementChild;
   }
 
-  getColumnProps() {
-    const maxValue = Math.max(...this.data);
+  getColumnProps(data) {
+    const maxValue = Math.max(...data);
     const scale = 50 / maxValue;
 
-    return this.data.map((item) => {
+    return data.map((item) => {
       return {
         percent: ((item / maxValue) * 100).toFixed(0) + "%",
         value: String(Math.floor(item * scale)),
@@ -43,11 +46,12 @@ export default class ColumnChart {
   createChartClasses() {
     return this.data.length
       ? "column-chart"
-      : "column-chart column-chart_loading";
+      : "column-chart_loading column-chart";
   }
 
-  createPropchart() {
-    return this.getColumnProps(this.data)
+  createPropchart(data = this.data) {
+    const columnProps = this.getColumnProps(data);
+    return columnProps
       .map(
         ({ value, percent }) =>
           `<div style="--value: ${value}" data-tooltip="${percent}"></div>`
@@ -73,9 +77,11 @@ export default class ColumnChart {
   }
 
   update(newData) {
-    this.data = newData;
-    this.element.querySelector('[data-element="body"]').innerHTML =
-      this.createPropchart();
+    if (!Array.isArray(newData)) return;
+
+    const newValue = newData.reduce((acc, item) => acc + item);
+    this.subElements.body.innerHTML = this.createPropchart(newData);
+    this.subElements.header.innerHTML = this.formatHeading(newValue);
   }
 
   remove() {
@@ -84,5 +90,11 @@ export default class ColumnChart {
 
   destroy() {
     this.remove();
+  }
+
+  selectSubElements() {
+    this.element.querySelectorAll("[data-element]").forEach((element) => {
+      this.subElements[element.dataset.element] = element;
+    });
   }
 }
